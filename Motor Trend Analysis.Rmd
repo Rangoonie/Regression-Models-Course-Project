@@ -1,0 +1,78 @@
+---
+title: "Motor Trend Analysis"
+author: "Philong Ho"
+date: "3/4/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Motor Trend Analysis
+
+## Overview
+In this analysis, we will be looking at the mtcars dataset in R. Let's pretend we work for Motor Trend, a magazine about the automobile industry. Looking at the collection of cars, we are interested in the relationship between a set of variables and miles per gallon (mpg), our outcome. We are interested in the two questions:
+
+* “Is an automatic or manual transmission better for MPG”
+* "Quantify the MPG difference between automatic and manual transmissions"
+
+Our findings show that manual transmission has a larger mean output of mpg than that of automatic transmission. We also find that our linear model comparing mpg to transmission type is not as optimized as a model that compares mpg to transmission type plus other variables such as cylinders, horsepower, and weight included as regressors. This shows that our outcome is correlated with the other variables and can not be left out of our linear models. 
+
+## Data Summary
+Let's load in the data and take a look at it.
+```{r}
+library(datasets)
+data(mtcars)
+
+str(mtcars)
+head(mtcars)
+```
+
+We can see that this is a dataset of 32 observations and 11 variables. We can answer the first question above by first looking at the variables mpg and am (automatic). The variable am is a numeric class which assigns a 1 to automatic and a 0 to manual. We will change the class to a factor and assign 0 to automatic and 1 to manual for simplicity. 
+
+```{r}
+#Converting the 'am' variable to a factor with 2 lvls: 'Manual' as 1, and 'Automatic' as 0
+mtcars$am <- factor(mtcars$am, labels = c("Automatic", "Manual"))
+```
+
+Now, we want to just do a quick analysis and see the mean mpg's of both transmission types. 
+
+```{r}
+mean.mpg <- aggregate(mpg ~ am, mtcars, mean)
+
+boxplot(mpg ~ am, data = mtcars, xlab = "Transmission Type", ylab = "MPG (Miles Per Gallon)", main = "MPG (Miles Per Gallon) by Transmission Type")
+```
+
+We can see that manual transmission has a mean mpg of 24.39 and automatic transmission has a mean mpg of 17.15. This is also represented in the boxplot. 
+
+Now, we can do a quick hypothesis testing using a T Test. 
+
+```{r}
+t.test(mtcars$mpg ~ mtcars$am)
+```
+
+Looking at the p-value, we can see that it is less than 0.05 so we reject the null hypothesis that there is no difference in mpg by transmission type. Let's make a linear model to see if there is a good linear relationship between mpg and am. 
+
+```{r}
+fit <- lm(mpg ~ am, data = mtcars)
+summary(fit)
+```
+
+We can see that the coefficients for automatic and manual are the means we calculated before. We can look at R^2 and see that its value is 0.3598 which means this model only explains for about 36% of the variance. Let's add in some more regressors to check for a better model. I chose to use cylinders, horsepower, and weight because they are easily understandable. 
+
+```{r}
+fit2 <- lm(mpg ~ am + cyl + hp + wt, data = mtcars)
+summary(fit2)
+```
+
+The intercept, which is our mpg for automatic transmission, has a coefficient of 36.17 and our manual transmission is 1.48 above that of automatic. The other variables are negatively correlated. This time, the R^2 value is 0.849 which explains 85% of the variance. This is a much better linear model. 
+
+```{r}
+par(mfrow = c(2,2))
+plot(fit2)
+```
+
+Our qq plot shows that our model is fairly normal but tails off at both ends. Our residuals vs fitted plot is not very linear as we can see a V pattern. Our scale-location plot is a positive sloped line so it's not homoscedastic. Our residuals vs leverage plot doesn't show any influential outliers. 
+
+## Conclusion
+Our analysis shows that manual transmission is better than automatic transmission for mpg outcome. Our multivariate linear model was a fairly good model to show this conclusion even though it didn't have much homoscedasticity. We can not leave out the other variables because they are all correlated with mpg.  
